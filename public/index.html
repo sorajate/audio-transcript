@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NongTor Record API - Test Client</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            background: #e3f2fd;
+            border-color: #0056b3;
+        }
+        .upload-area.dragover {
+            background: #e3f2fd;
+            border-color: #0056b3;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .upload-btn:hover {
+            background: #0056b3;
+        }
+        .upload-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .progress {
+            display: none;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: indeterminate 2s linear infinite;
+        }
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .transcript-section, .summary-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metadata-item {
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .metadata-label {
+            font-weight: bold;
+            color: #495057;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .metadata-value {
+            color: #007bff;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .key-points {
+            margin: 15px 0;
+        }
+        .key-points ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .key-points li {
+            margin: 5px 0;
+            color: #495057;
+        }
+        .main-topics {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .main-topics h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .main-topics ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .main-topics li {
+            margin: 5px 0;
+            color: #495057;
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border-left: 3px solid #2196f3;
+            list-style: none;
+        }
+        .status {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            margin: 20px 0;
+        }
+        .supported-formats {
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .timestamps-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .timestamps-section h5 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+        .timestamps-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .timestamp-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .timestamp {
+            color: #007bff;
+            font-weight: bold;
+            min-width: 50px;
+            font-family: monospace;
+        }
+        .speaker {
+            color: #28a745;
+            font-weight: bold;
+            min-width: 80px;
+        }
+        .text {
+            color: #495057;
+            flex: 1;
+        }
+        .formatted-transcript-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .formatted-transcript-section h4 {
+            margin: 0 0 15px 0;
+            color: #28a745;
+        }
+        .formatted-content {
+            background: #fff;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+        }
+        .formatted-content pre {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .transcript-section details {
+            margin-top: 10px;
+        }
+        .transcript-section summary {
+            cursor: pointer;
+            color: #007bff;
+            font-weight: 500;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .transcript-section summary:hover {
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NongTor Record API</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <h3>📁 Upload Audio File</h3>
+            <p>Drag and drop an audio file here, or click to select</p>
+            <input type="file" id="fileInput" class="file-input" accept=".wav,.mp3,.mp4,.m4a" />
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                Choose File
+            </button>
+            <button class="upload-btn" id="transcribeBtn" onclick="transcribeAudio()" disabled>
+                🎤 Transcribe
+            </button>
+            <div class="supported-formats">
+                Supported formats: WAV, MP3, MP4, M4A (max 200MB)
+            </div>
+        </div>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="status" id="status">Processing audio file...</div>
+        </div>
+
+        <div class="result" id="result">
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                document.getElementById('transcribeBtn').disabled = false;
+                updateUploadArea(`Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`);
+            }
+        });
+
+        // Drag and drop handlers
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                document.getElementById('fileInput').files = files;
+                document.getElementById('transcribeBtn').disabled = false;
+                updateUploadArea(`Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`);
+            }
+        });
+
+        function updateUploadArea(message) {
+            uploadArea.innerHTML = `
+                <h3>📁 Upload Audio File</h3>
+                <p>${message}</p>
+                <input type="file" id="fileInput" class="file-input" accept=".wav,.mp3,.mp4,.m4a" />
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose Different File
+                </button>
+                <button class="upload-btn" id="transcribeBtn" onclick="transcribeAudio()">
+                    🎤 Transcribe
+                </button>
+                <div class="supported-formats">
+                    Supported formats: WAV, MP3, MP4, M4A (max 200MB)
+                </div>
+            `;
+            
+            // Re-attach event listener
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                selectedFile = e.target.files[0];
+                if (selectedFile) {
+                    updateUploadArea(`Selected: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`);
+                }
+            });
+        }
+
+        async function transcribeAudio() {
+            if (!selectedFile) {
+                alert('Please select an audio file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audio', selectedFile);
+
+            // Show progress
+            document.getElementById('progress').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('transcribeBtn').disabled = true;
+            document.getElementById('status').textContent = `Processing ${selectedFile.name}... (3 steps: transcribe → summarize → format)`;
+
+            try {
+                const response = await fetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displaySuccess(data.data);
+                } else {
+                    displayError(data.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                displayError('Network error: ' + error.message);
+            } finally {
+                document.getElementById('progress').style.display = 'none';
+                document.getElementById('transcribeBtn').disabled = false;
+            }
+        }
+
+        function displaySuccess(data) {
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultContent.innerHTML = `
+                <h3>✅ Transcription Complete!</h3>
+                
+                ${data.formatted_transcript ? `
+                <div class="formatted-transcript-section">
+                    <h4>📝 Formatted Transcript</h4>
+                    <div class="formatted-content">
+                        <pre>${data.formatted_transcript}</pre>
+                    </div>
+                </div>
+                ` : ''}
+                
+                <div class="transcript-section">
+                    <h4>📋 Raw Transcript</h4>
+                    <details>
+                        <summary>Click to view raw transcript and timestamps</summary>
+                        <p>${data.transcript || 'No transcript available'}</p>
+                        
+                        ${data.transcript_with_timestamps && data.transcript_with_timestamps.length > 0 ? `
+                        <div class="timestamps-section">
+                            <h5>🕐 Detailed Timestamps</h5>
+                            <div class="timestamps-list">
+                                ${data.transcript_with_timestamps.map(item => `
+                                    <div class="timestamp-item">
+                                        <span class="timestamp">[${item.timestamp}]</span>
+                                        <span class="speaker">${item.speaker}:</span>
+                                        <span class="text">${item.text}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </details>
+                </div>
+                
+                <div class="summary-section">
+                    <h4>📊 Summary</h4>
+                    <p>${data.summary || 'No summary available'}</p>
+                </div>
+                
+                ${data.key_points && data.key_points.length > 0 ? `
+                <div class="key-points">
+                    <h4>🔑 Key Points</h4>
+                    <ul>
+                        ${data.key_points.map(point => `<li>${point}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                ${data.main_topics && data.main_topics.length > 0 ? `
+                <div class="main-topics">
+                    <h4>📋 Main Topics</h4>
+                    <ul>
+                        ${data.main_topics.map(topic => `<li>${topic}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+                
+                <div class="metadata">
+                    <div class="metadata-item">
+                        <div class="metadata-label">Duration</div>
+                        <div class="metadata-value">${data.metadata?.estimated_duration || 'Unknown'}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Language</div>
+                        <div class="metadata-value">${data.metadata?.language || 'Unknown'}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Speakers</div>
+                        <div class="metadata-value">${data.metadata?.speakers || 'Unknown'}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Audio Quality</div>
+                        <div class="metadata-value">${data.metadata?.audio_quality || 'Unknown'}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Confidence</div>
+                        <div class="metadata-value">${data.confidence_score || 'Unknown'}</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-label">Processing Time</div>
+                        <div class="metadata-value">${data.processing_info?.processing_time_ms || 0}ms</div>
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.className = 'result success';
+            resultDiv.style.display = 'block';
+        }
+
+        function displayError(error) {
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultContent.innerHTML = `
+                <h3>❌ Error</h3>
+                <p>${error}</p>
+            `;
+            
+            resultDiv.className = 'result error';
+            resultDiv.style.display = 'block';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html> 
