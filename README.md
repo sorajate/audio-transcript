@@ -57,8 +57,40 @@ MAX_FILE_SIZE=200MB
 # Development mode
 npm run dev
 
-# Production mode
+# Production mode (basic)
 npm start
+
+# Production mode with PM2 (recommended)
+npm run pm2:prod
+```
+
+## 🚀 Production Deployment
+
+For production deployment with process management, monitoring, and auto-restart capabilities:
+
+```bash
+# Install PM2 globally (if not already installed)
+npm install -g pm2
+
+# Start in production mode
+npm run pm2:prod
+
+# Monitor the application
+npm run pm2:status
+npm run pm2:logs
+npm run pm2:monit
+```
+
+See [PM2_DEPLOYMENT.md](./PM2_DEPLOYMENT.md) for detailed deployment instructions.
+
+### PM2 Management Commands
+```bash
+npm run pm2:start      # Start the application
+npm run pm2:stop       # Stop the application  
+npm run pm2:restart    # Restart the application
+npm run pm2:reload     # Graceful reload
+npm run pm2:logs       # View logs
+npm run pm2:monit      # Monitor resources
 ```
 
 ## 📡 API Endpoints
